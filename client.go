@@ -284,18 +284,13 @@ func (c *Client) Do(req *http.Request, body interface{}) (*http.Response, error)
 	}
 
 	errResp := &ErrorResponse{Response: httpResp}
-	exResp := &ExceptionResponse{Response: httpResp}
-	err = c.Unmarshal(httpResp.Body, body, errResp, exResp)
+	err = c.Unmarshal(httpResp.Body, body, errResp)
 	if err != nil {
 		return httpResp, err
 	}
 
-	if errResp.Message != "" {
+	if errResp.Error() != "" {
 		return httpResp, errResp
-	}
-
-	if exResp.ExceptionMessage != "" {
-		return httpResp, exResp
 	}
 
 	return httpResp, nil
@@ -380,13 +375,13 @@ func CheckResponse(r *http.Response) error {
 		return errorResponse
 	}
 
+	if r.ContentLength == 0 {
+		return errors.New(r.Status)
+	}
+
 	err = checkContentType(r)
 	if err != nil {
 		return errors.WithStack(err)
-	}
-
-	if r.ContentLength == 0 {
-		return errors.New("response body is empty")
 	}
 
 	// convert json to struct
@@ -404,30 +399,48 @@ func CheckResponse(r *http.Response) error {
 	return nil
 }
 
-type ExceptionResponse struct {
-	// HTTP response that caused this error
-	Response *http.Response
-
-	ExceptionType      string `json:"ExceptionType"`
-	ExceptionMessage   string `json:"ExceptionMessage"`
-	ExceptionFaultCode string `json:"ExceptionFaultCode"`
-	ExceptionMessageID string `json:"ExceptionMessageID"`
-	ExceptionDetails   string `json:"ExceptionDetails"`
-}
-
-func (r *ExceptionResponse) Error() string {
-	return r.ExceptionMessage
-}
-
 type ErrorResponse struct {
 	// HTTP response that caused this error
 	Response *http.Response
 
-	Message string `json:"Message"`
+	Message    string `json:"Message"`
+	ModelState struct {
+		MessageServiceEdition []string `json:"message.ServiceEdition"`
+		MessageType           []string `json:"message.Type"`
+		MessageServiceCode    []string `json:"message.ServiceCode"`
+	} `json:"ModelState"`
 }
 
 func (r *ErrorResponse) Error() string {
-	return r.Message
+	errs := []string{}
+
+	if r.Message != "" {
+		errs = append(errs, r.Message)
+	}
+
+	for _, v := range r.ModelState.MessageServiceEdition {
+		if v != "" {
+			errs = append(errs, v)
+		}
+	}
+
+	for _, v := range r.ModelState.MessageType {
+		if v != "" {
+			errs = append(errs, v)
+		}
+	}
+
+	for _, v := range r.ModelState.MessageServiceCode {
+		if v != "" {
+			errs = append(errs, v)
+		}
+	}
+
+	if len(r.Message) == 0 {
+		return ""
+	}
+
+	return strings.Join(errs, "\n")
 }
 
 func checkContentType(response *http.Response) error {
