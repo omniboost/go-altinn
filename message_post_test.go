@@ -3,13 +3,13 @@ package altinn_test
 import (
 	"encoding/json"
 	"encoding/xml"
-	"log"
+	"fmt"
 	"testing"
 
 	altinn "github.com/omniboost/go-altinn"
 )
 
-func TestMarshalMelding(t *testing.T) {
+func TestMessagePost(t *testing.T) {
 	b := []byte(`
 <?xml version='1.0' encoding='utf-8'?>
 <melding xmlns:seres= "http://seres.no/xsd/forvaltningsdata" dataFormatProvider="SERES" dataFormatId="6400" dataFormatVersion="45188">
@@ -19,36 +19,36 @@ func TestMarshalMelding(t *testing.T) {
       <fomDato>2024-06-01</fomDato>
       <tomDato>2024-06-30</tomDato>
     </rapportPeriode>
-    <raNummer>RA-0297</raNummer>
+    <raNummer>TEST</raNummer>
     <delRegNummer>0</delRegNummer>
-    <identnummerEnhet>973068075</identnummerEnhet>
+    <identnummerEnhet>TEST</identnummerEnhet>
     <sendtFraSluttbrukersystem>true</sendtFraSluttbrukersystem>
     <statistiskEnhet>
-      <enhetsident>973068075</enhetsident>
-      <enhetstype>BEDR</enhetstype>
+      <enhetsident>TEST</enhetsident>
+      <enhetstype>TEST</enhetstype>
     </statistiskEnhet>
     <skjemaidentifikasjon>
       <periodenummer>06</periodenummer>
       <periodetype>MND</periodetype>
       <periodeAAr>2024</periodeAAr>
-      <undersoekelsesnummer>78</undersoekelsesnummer>
+      <undersoekelsesnummer>TEST</undersoekelsesnummer>
     </skjemaidentifikasjon>
   </InternInformasjon>
   <KontaktpersonOgKommentarfelt>
     <kontaktperson>
-      <epostadresse>kristin.frigstad@strawberry.no</epostadresse>
-      <navn>Kristin Frigstad</navn>
-      <telefonSFU>38128600</telefonSFU>
+      <epostadresse>TEST</epostadresse>
+      <navn>TEST</navn>
+      <telefonSFU>TEST</telefonSFU>
     </kontaktperson>
   </KontaktpersonOgKommentarfelt>
   <ForetakOgVirksomhetsopplysninger>
     <virksomhet>
-      <organisasjonsnummerVirksomhet>973068075</organisasjonsnummerVirksomhet>
-      <navnVirksomhet>Clarion Hotel Ernst</navnVirksomhet>
+      <organisasjonsnummerVirksomhet>TEST</organisasjonsnummerVirksomhet>
+      <navnVirksomhet>TEST</navnVirksomhet>
       <adresseVirksomhet>
-        <gateadresse>Radhusgaten 2</gateadresse>
-        <postnummer>4664</postnummer>
-        <poststed>Kristiansand</poststed>
+        <gateadresse>TEST</gateadresse>
+        <postnummer>TEST</postnummer>
+        <poststed>TEST</poststed>
       </adresseVirksomhet>
     </virksomhet>
   </ForetakOgVirksomhetsopplysninger>
@@ -58,8 +58,8 @@ func TestMarshalMelding(t *testing.T) {
   <Naeringskontrollspoersmaal>
     <visNaeringskontrollJaNeiPrefill />
     <Naeringskontroll>
-      <naeringskode>55.101</naeringskode>
-      <naeringstekst>Drift av hoteller, pensjonater og moteller med restaurant</naeringstekst>
+      <naeringskode>TEST</naeringskode>
+      <naeringstekst>TEST</naeringstekst>
       <naeringsbeskrivelse />
       <nyNaeringsbeskrivelse>
         <alltidViktigsteAktivitet />
@@ -168,30 +168,18 @@ func TestMarshalMelding(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	// print out struct as xml
-	b, err = xml.MarshalIndent(melding, "", "  ")
-	if err != nil {
-		t.Error(err)
-	}
-	log.Println(string(b))
-
-	// convert struct to json
-	b, err = json.MarshalIndent(melding, "", "  ")
-	if err != nil {
-		t.Error(err)
-	}
-
-	// convert json back to struct
-	err = json.Unmarshal(b, &melding)
+	req := client.NewMessagePost()
+	req.RequestBody().Embedded.Forms = append(req.RequestBody().Embedded.Forms, altinn.Form{
+		Type:              "",
+		DataFormatId:      "",
+		DataFormatVersion: "",
+		FormData:          melding,
+	})
+	resp, err := req.Do()
 	if err != nil {
 		t.Error(err)
 	}
 
-	// print out struct as xml
-	b, err = xml.MarshalIndent(melding, "", "  ")
-	if err != nil {
-		t.Error(err)
-	}
-	log.Println(string(b))
+	b, _ = json.MarshalIndent(resp, "", "  ")
+	fmt.Println(string(b))
 }

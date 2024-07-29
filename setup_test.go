@@ -1,59 +1,78 @@
-package vismanet_test
+package altinn_test
 
 import (
-	"context"
+	"crypto/tls"
+	"encoding/base64"
+	"encoding/pem"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
-	vismanet "github.com/omniboost/go-altinn"
-	"golang.org/x/oauth2"
+	altinn "github.com/omniboost/go-altinn"
+	"golang.org/x/crypto/pkcs12"
 )
 
 var (
-	client *vismanet.Client
+	client *altinn.Client
 )
 
 func TestMain(m *testing.M) {
 	baseURLString := os.Getenv("BASE_URL")
-	clientID := os.Getenv("CLIENT_ID")
-	clientSecret := os.Getenv("CLIENT_SECRET")
-	accessToken := os.Getenv("ACCESS_TOKEN")
-	refreshToken := os.Getenv("REFRESH_TOKEN")
-	companyID := os.Getenv("COMPANY_ID")
-	applicationType := os.Getenv("APPLICATION_TYPE")
-	tokenURL := os.Getenv("TOKEN_URL")
+	apiKey := os.Getenv("API_KEY")
+	userName := os.Getenv("USER_NAME")
+	userPassword := os.Getenv("USER_PASSWORD")
+	certPem := []byte(os.Getenv("CERT_PEM"))
+	keyPem := []byte(os.Getenv("KEY_PEM"))
+	p12 := os.Getenv("P12")
 	debug := os.Getenv("DEBUG")
 
-	oauthConfig := vismanet.NewOauth2Config()
-	oauthConfig.ClientID = clientID
-	oauthConfig.ClientSecret = clientSecret
-
-	// set alternative token url
-	if tokenURL != "" {
-		oauthConfig.Endpoint.TokenURL = tokenURL
-	}
-
-	token := &oauth2.Token{
-		RefreshToken: refreshToken,
-		AccessToken:  accessToken,
-		// Expiry:       time.Now().AddDate(0, 0, 1),
-	}
-
-	// get http client with automatic oauth logic
-	httpClient := oauthConfig.Client(context.Background(), token)
-
-	client = vismanet.NewClient(httpClient)
-	if companyID != "" {
-		client.SetCompanyID(companyID)
-	}
-	if applicationType != "" {
-		client.SetApplicationType(applicationType)
-	}
+	client = altinn.NewClient(nil)
+	client.SetAPIKey(apiKey)
+	client.SetUserName(userName)
+	client.SetUserPassword(userPassword)
 	if debug != "" {
 		client.SetDebug(true)
 	}
+
+	cert, err := tls.X509KeyPair(certPem, keyPem)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	data, err := base64.StdEncoding.DecodeString(p12)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	pems, err := pkcs12.ToPEM(data, "9Tu4Lp3Wac")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var pemData []byte
+	for _, b := range pems {
+		pemData = append(pemData, pem.EncodeToMemory(b)...)
+	}
+
+	cert, err = tls.X509KeyPair(pemData, pemData)
+	if err != nil {
+		panic(err)
+	}
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			Certificates:  []tls.Certificate{cert},
+			Renegotiation: tls.RenegotiateOnceAsClient,
+		},
+	}
+	httpClient := &http.Client{
+		Transport: tr,
+		Timeout:   30 * time.Second,
+	}
+	client.SetHTTPClient(httpClient)
 
 	if baseURLString != "" {
 		baseURL, err := url.Parse(baseURLString)

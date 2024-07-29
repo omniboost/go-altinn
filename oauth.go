@@ -1,4 +1,4 @@
-package vismanet
+package altinn
 
 import (
 	"golang.org/x/oauth2"

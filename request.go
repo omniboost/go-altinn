@@ -1,4 +1,4 @@
-package vismanet
+package altinn
 
 import "net/url"
 

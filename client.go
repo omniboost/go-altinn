@@ -1,4 +1,4 @@
-package vismanet
+package altinn
 
 import (
 	"bytes"
@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
+	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
 	"path"
@@ -20,7 +20,7 @@ import (
 
 const (
 	libraryVersion = "0.0.1"
-	userAgent      = "go-vismanet/" + libraryVersion
+	userAgent      = "go-altinn/" + libraryVersion
 	mediaType      = "application/json"
 	charset        = "utf-8"
 )
@@ -28,8 +28,8 @@ const (
 var (
 	BaseURL = url.URL{
 		Scheme: "https",
-		Host:   "integration.visma.net",
-		Path:   "/API/",
+		Host:   "https://www.altinn.no",
+		Path:   "/api/",
 	}
 )
 
@@ -40,6 +40,7 @@ func NewClient(httpClient *http.Client) *Client {
 	}
 
 	client := &Client{}
+	client.cookiejar, _ = cookiejar.New(nil)
 
 	client.SetHTTPClient(httpClient)
 	client.SetBaseURL(BaseURL)
@@ -60,9 +61,10 @@ type Client struct {
 	baseURL url.URL
 
 	// credentials
-	accessToken     string
-	companyID       string
-	applicationType string
+	apiKey       string
+	userName     string
+	userPassword string
+	cookiejar    *cookiejar.Jar
 
 	// User agent for client
 	userAgent string
@@ -83,6 +85,7 @@ type RequestCompletionCallback func(*http.Request, *http.Response)
 
 func (c *Client) SetHTTPClient(client *http.Client) {
 	c.http = client
+	c.http.Jar = c.cookiejar
 }
 
 func (c Client) Debug() bool {
@@ -93,28 +96,28 @@ func (c *Client) SetDebug(debug bool) {
 	c.debug = debug
 }
 
-func (c Client) AccessToken() string {
-	return c.accessToken
+func (c Client) APIKey() string {
+	return c.apiKey
 }
 
-func (c *Client) SetAccessToken(accessToken string) {
-	c.accessToken = accessToken
+func (c *Client) SetAPIKey(apiKey string) {
+	c.apiKey = apiKey
 }
 
-func (c Client) CompanyID() string {
-	return c.companyID
+func (c Client) UserName() string {
+	return c.userName
 }
 
-func (c *Client) SetCompanyID(companyID string) {
-	c.companyID = companyID
+func (c *Client) SetUserName(userName string) {
+	c.userName = userName
 }
 
-func (c Client) ApplicationType() string {
-	return c.applicationType
+func (c Client) UserPassword() string {
+	return c.userPassword
 }
 
-func (c *Client) SetApplicationType(applicationType string) {
-	c.applicationType = applicationType
+func (c *Client) SetUserPassword(userPassword string) {
+	c.userPassword = userPassword
 }
 
 func (c Client) BaseURL() url.URL {
@@ -222,13 +225,7 @@ func (c *Client) NewRequest(ctx context.Context, req Request) (*http.Request, er
 	r.Header.Add("Content-Type", fmt.Sprintf("%s; charset=%s", c.MediaType(), c.Charset()))
 	r.Header.Add("Accept", c.MediaType())
 	r.Header.Add("User-Agent", c.UserAgent())
-	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.AccessToken()))
-	if c.CompanyID() != "" {
-		r.Header.Add("ipp-company-id", c.CompanyID())
-	}
-	if c.ApplicationType() != "" {
-		r.Header.Add("ipp-application-type", c.ApplicationType())
-	}
+	r.Header.Add("ApiKey", c.APIKey())
 
 	return r, nil
 }
@@ -309,7 +306,7 @@ func (c *Client) Unmarshal(r io.Reader, vv ...interface{}) error {
 		return nil
 	}
 
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return err
 	}
@@ -341,6 +338,23 @@ func (c *Client) Unmarshal(r io.Reader, vv ...interface{}) error {
 	return nil
 }
 
+func (c *Client) IsAuthenticated() bool {
+	return len(c.http.Jar.Cookies(&c.baseURL)) > 0
+}
+
+func (c *Client) Authenticate(req *http.Request) error {
+	if c.IsAuthenticated() {
+		return nil
+	}
+
+	authReq := c.NewAuthenticateWithPassword()
+	authReq.RequestBody().UserName = c.UserName()
+	authReq.RequestBody().UserPassword = c.UserPassword()
+	authReq.QueryParams().ForceEIAuthentication = false
+	_, err := authReq.Do()
+	return err
+}
+
 // CheckResponse checks the Client response for errors, and returns them if
 // present. A response is considered an error if it has a status code outside
 // the 200 range. Client error responses are expected to have either no response
@@ -360,8 +374,8 @@ func CheckResponse(r *http.Response) error {
 	}
 
 	// read data and copy it back
-	data, err := ioutil.ReadAll(r.Body)
-	r.Body = ioutil.NopCloser(bytes.NewReader(data))
+	data, err := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(bytes.NewReader(data))
 	if err != nil {
 		return errorResponse
 	}
