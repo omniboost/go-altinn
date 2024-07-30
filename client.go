@@ -284,13 +284,18 @@ func (c *Client) Do(req *http.Request, body interface{}) (*http.Response, error)
 	}
 
 	errResp := &ErrorResponse{Response: httpResp}
-	err = c.Unmarshal(httpResp.Body, body, errResp)
+	valResp := &ValidationResponse{Response: httpResp}
+	err = c.Unmarshal(httpResp.Body, body, errResp, valResp)
 	if err != nil {
 		return httpResp, err
 	}
 
 	if errResp.Error() != "" {
 		return httpResp, errResp
+	}
+
+	if valResp.Error() != "" {
+		return httpResp, valResp
 	}
 
 	return httpResp, nil
@@ -438,6 +443,38 @@ func (r *ErrorResponse) Error() string {
 
 	if len(r.Message) == 0 {
 		return ""
+	}
+
+	return strings.Join(errs, "\n")
+}
+
+// {
+//   "ValidationErrors": [
+//     {
+//       "FieldName": "Not specified",
+//       "ErrorMessage": "<SchemaValidationError>The &#39;Melding&#39; element is not declared.</SchemaValidationError>"
+//     }
+//   ]
+// }
+
+type ValidationResponse struct {
+	// HTTP response that caused this error
+	Response *http.Response
+
+	ValidationErrors []struct {
+		FieldName    string `json:"FieldName"`
+		ErrorMessage string `json:"ErrorMessage"`
+	}
+}
+
+func (r *ValidationResponse) Error() string {
+	if len(r.ValidationErrors) == 0 {
+		return ""
+	}
+
+	errs := []string{}
+	for _, v := range r.ValidationErrors {
+		errs = append(errs, fmt.Sprintf("%s: %s", v.FieldName, v.ErrorMessage))
 	}
 
 	return strings.Join(errs, "\n")
