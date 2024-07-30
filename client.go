@@ -28,7 +28,7 @@ const (
 var (
 	BaseURL = url.URL{
 		Scheme: "https",
-		Host:   "https://www.altinn.no",
+		Host:   "www.altinn.no",
 		Path:   "/api/",
 	}
 )
