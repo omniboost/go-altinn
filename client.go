@@ -21,7 +21,7 @@ import (
 const (
 	libraryVersion = "0.0.1"
 	userAgent      = "go-altinn/" + libraryVersion
-	mediaType      = "application/json"
+	mediaType      = "application/hal+json"
 	charset        = "utf-8"
 )
 
