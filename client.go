@@ -384,11 +384,6 @@ func CheckResponse(r *http.Response) error {
 		return errors.New(r.Status)
 	}
 
-	err = checkContentType(r)
-	if err != nil {
-		return errors.WithStack(err)
-	}
-
 	// convert json to struct
 	if len(data) != 0 {
 		err = json.Unmarshal(data, &errorResponse)
@@ -478,14 +473,4 @@ func (r *ValidationResponse) Error() string {
 	}
 
 	return strings.Join(errs, "\n")
-}
-
-func checkContentType(response *http.Response) error {
-	header := response.Header.Get("Content-Type")
-	contentType := strings.Split(header, ";")[0]
-	if contentType != mediaType {
-		return fmt.Errorf("Expected Content-Type \"%s\", got \"%s\"", mediaType, contentType)
-	}
-
-	return nil
 }
