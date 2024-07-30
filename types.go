@@ -138,7 +138,7 @@ type Melding struct {
 func (m Melding) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	m.Seres = "http://seres.no/xsd/forvaltningsdata"
 	type Alias Melding
-	return e.EncodeElement(Alias(m), start)
+	return e.Encode(Alias(m))
 }
 
 type IntList map[string]int
