@@ -8,7 +8,7 @@ import (
 
 type Melding struct {
 	XMLName            xml.Name `xml:"melding"`
-	Seres              string   `xml:"seres,attr"`
+	Seres              string   `xml:"xmlns:seres,attr"`
 	DataFormatProvider string   `xml:"dataFormatProvider,attr"`
 	DataFormatId       string   `xml:"dataFormatId,attr"`
 	DataFormatVersion  string   `xml:"dataFormatVersion,attr"`
@@ -133,6 +133,12 @@ type Melding struct {
 			} `xml:"beleggHotell"`
 		} `xml:"belegg"`
 	} `xml:"Skjemadata"`
+}
+
+func (m Melding) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
+	m.Seres = "http://seres.no/xsd/forvaltningsdata"
+	type Alias Melding
+	return e.EncodeElement(Alias(m), start)
 }
 
 type IntList map[string]int
