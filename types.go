@@ -131,79 +131,79 @@ type Melding struct {
 						GJD_SVERIGE int `xml:"GJD_SVERIGE"`
 					} `xml:"norden"`
 					Europa struct {
-						GJD_ALBANIA             string `xml:"GJD_ALBANIA"`
-						GJD_ANDORRA             string `xml:"GJD_ANDORRA"`
-						GJD_BELGIA              string `xml:"GJD_BELGIA"`
-						GJD_BOSNIAOGHERZEGOVINA string `xml:"GJD_BOSNIAOGHERZEGOVINA"`
-						GJD_BULGARIA            string `xml:"GJD_BULGARIA"`
-						GJD_ESTLAND             string `xml:"GJD_ESTLAND"`
-						GJD_FRANKRIKE           string `xml:"GJD_FRANKRIKE"`
-						GJD_HELLAS              string `xml:"GJD_HELLAS"`
-						GJD_HVITERUSSLAND       string `xml:"GJD_HVITERUSSLAND"`
-						GJD_IRLAND              string `xml:"GJD_IRLAND"`
-						GJD_ITALIA              string `xml:"GJD_ITALIA"`
-						GJD_KOSOVO              string `xml:"GJD_KOSOVO"`
-						GJD_KROATIA             string `xml:"GJD_KROATIA"`
-						GJD_KYPROS              string `xml:"GJD_KYPROS"`
-						GJD_LATVIA              string `xml:"GJD_LATVIA"`
-						GJD_LIECHTENSTEIN       string `xml:"GJD_LIECHTENSTEIN"`
-						GJD_LITAUEN             string `xml:"GJD_LITAUEN"`
-						GJD_LUXEMBOURG          string `xml:"GJD_LUXEMBOURG"`
-						GJD_MAKEDONIA           string `xml:"GJD_MAKEDONIA"`
-						GJD_MALTA               string `xml:"GJD_MALTA"`
-						GJD_MOLDOVA             string `xml:"GJD_MOLDOVA"`
-						GJD_MONACO              string `xml:"GJD_MONACO"`
-						GJD_MONTNEGRO           string `xml:"GJD_MONTNEGRO"`
-						GJD_NEDERLAND           string `xml:"GJD_NEDERLAND"`
-						GJD_POLEN               string `xml:"GJD_POLEN"`
-						GJD_PORTUGAL            string `xml:"GJD_PORTUGAL"`
-						GJD_ROMANIA             string `xml:"GJD_ROMANIA"`
-						GJD_RUSSLAND            string `xml:"GJD_RUSSLAND"`
-						GJD_SANMARINO           string `xml:"GJD_SANMARINO"`
-						GJD_SERBIA              string `xml:"GJD_SERBIA"`
-						GJD_SLOVAKIA            string `xml:"GJD_SLOVAKIA"`
-						GJD_SLOVENIA            string `xml:"GJD_SLOVENIA"`
-						GJD_SPANIA              string `xml:"GJD_SPANIA"`
-						GJD_STORBRITANNIA       string `xml:"GJD_STORBRITANNIA"`
-						GJD_SVEITS              string `xml:"GJD_SVEITS"`
-						GJD_TSJEKKIA            string `xml:"GJD_TSJEKKIA"`
-						GJD_TYRKIA              string `xml:"GJD_TYRKIA"`
-						GJD_TYSKLAND            string `xml:"GJD_TYSKLAND"`
-						GJD_UKRAINA             string `xml:"GJD_UKRAINA"`
-						GJD_UNGARN              string `xml:"GJD_UNGARN"`
-						GJD_VATIKANSTATEN       string `xml:"GJD_VATIKANSTATEN"`
-						GJD_OSTERRIKE           string `xml:"GJD_OSTERRIKE"`
-					} `xml:"europa"`
+						GJD_ALBANIA             int `xml:"GJD_ALBANIA,omitempty"`
+						GJD_ANDORRA             int `xml:"GJD_ANDORRA,omitempty"`
+						GJD_BELGIA              int `xml:"GJD_BELGIA,omitempty"`
+						GJD_BOSNIAOGHERZEGOVINA int `xml:"GJD_BOSNIAOGHERZEGOVINA,omitempty"`
+						GJD_BULGARIA            int `xml:"GJD_BULGARIA,omitempty"`
+						GJD_ESTLAND             int `xml:"GJD_ESTLAND,omitempty"`
+						GJD_FRANKRIKE           int `xml:"GJD_FRANKRIKE,omitempty"`
+						GJD_HELLAS              int `xml:"GJD_HELLAS,omitempty"`
+						GJD_HVITERUSSLAND       int `xml:"GJD_HVITERUSSLAND,omitempty"`
+						GJD_IRLAND              int `xml:"GJD_IRLAND,omitempty"`
+						GJD_ITALIA              int `xml:"GJD_ITALIA,omitempty"`
+						GJD_KOSOVO              int `xml:"GJD_KOSOVO,omitempty"`
+						GJD_KROATIA             int `xml:"GJD_KROATIA,omitempty"`
+						GJD_KYPROS              int `xml:"GJD_KYPROS,omitempty"`
+						GJD_LATVIA              int `xml:"GJD_LATVIA,omitempty"`
+						GJD_LIECHTENSTEIN       int `xml:"GJD_LIECHTENSTEIN,omitempty"`
+						GJD_LITAUEN             int `xml:"GJD_LITAUEN,omitempty"`
+						GJD_LUXEMBOURG          int `xml:"GJD_LUXEMBOURG,omitempty"`
+						GJD_MAKEDONIA           int `xml:"GJD_MAKEDONIA,omitempty"`
+						GJD_MALTA               int `xml:"GJD_MALTA,omitempty"`
+						GJD_MOLDOVA             int `xml:"GJD_MOLDOVA,omitempty"`
+						GJD_MONACO              int `xml:"GJD_MONACO,omitempty"`
+						GJD_MONTNEGRO           int `xml:"GJD_MONTNEGRO,omitempty"`
+						GJD_NEDERLAND           int `xml:"GJD_NEDERLAND,omitempty"`
+						GJD_POLEN               int `xml:"GJD_POLEN,omitempty"`
+						GJD_PORTUGAL            int `xml:"GJD_PORTUGAL,omitempty"`
+						GJD_ROMANIA             int `xml:"GJD_ROMANIA,omitempty"`
+						GJD_RUSSLAND            int `xml:"GJD_RUSSLAND,omitempty"`
+						GJD_SANMARINO           int `xml:"GJD_SANMARINO,omitempty"`
+						GJD_SERBIA              int `xml:"GJD_SERBIA,omitempty"`
+						GJD_SLOVAKIA            int `xml:"GJD_SLOVAKIA,omitempty"`
+						GJD_SLOVENIA            int `xml:"GJD_SLOVENIA,omitempty"`
+						GJD_SPANIA              int `xml:"GJD_SPANIA,omitempty"`
+						GJD_STORBRITANNIA       int `xml:"GJD_STORBRITANNIA,omitempty"`
+						GJD_SVEITS              int `xml:"GJD_SVEITS,omitempty"`
+						GJD_TSJEKKIA            int `xml:"GJD_TSJEKKIA,omitempty"`
+						GJD_TYRKIA              int `xml:"GJD_TYRKIA,omitempty"`
+						GJD_TYSKLAND            int `xml:"GJD_TYSKLAND,omitempty"`
+						GJD_UKRAINA             int `xml:"GJD_UKRAINA,omitempty"`
+						GJD_UNGARN              int `xml:"GJD_UNGARN,omitempty"`
+						GJD_VATIKANSTATEN       int `xml:"GJD_VATIKANSTATEN,omitempty"`
+						GJD_OSTERRIKE           int `xml:"GJD_OSTERRIKE,omitempty"`
+					} `xml:"europa,omitempty"`
 					Asia struct {
-						GJD_EMIRATER    string `xml:"GJD_EMIRATER"`
-						GJD_INDIA       string `xml:"GJD_INDIA"`
-						GJD_INDONESIA   string `xml:"GJD_INDONESIA"`
-						GJD_ISRAEL      string `xml:"GJD_ISRAEL"`
-						GJD_JAPAN       string `xml:"GJD_JAPAN"`
-						GJD_KINA        string `xml:"GJD_KINA"`
-						GJD_MALAYSIA    string `xml:"GJD_MALAYSIA"`
-						GJD_QATAR       string `xml:"GJD_QATAR"`
-						GJD_SINGAPORE   string `xml:"GJD_SINGAPORE"`
-						GJD_SOR_KOREA   string `xml:"GJD_SOR_KOREA"`
-						GJD_TAIWAN      string `xml:"GJD_TAIWAN"`
-						GJD_THAILAND    string `xml:"GJD_THAILAND"`
-						GJD_ASIA_ELLERS string `xml:"GJD_ASIA_ELLERS"`
-					} `xml:"asia"`
+						GJD_EMIRATER    int `xml:"GJD_EMIRATER,omitempty"`
+						GJD_INDIA       int `xml:"GJD_INDIA,omitempty"`
+						GJD_INDONESIA   int `xml:"GJD_INDONESIA,omitempty"`
+						GJD_ISRAEL      int `xml:"GJD_ISRAEL,omitempty"`
+						GJD_JAPAN       int `xml:"GJD_JAPAN,omitempty"`
+						GJD_KINA        int `xml:"GJD_KINA,omitempty"`
+						GJD_MALAYSIA    int `xml:"GJD_MALAYSIA,omitempty"`
+						GJD_QATAR       int `xml:"GJD_QATAR,omitempty"`
+						GJD_SINGAPORE   int `xml:"GJD_SINGAPORE,omitempty"`
+						GJD_SOR_KOREA   int `xml:"GJD_SOR_KOREA,omitempty"`
+						GJD_TAIWAN      int `xml:"GJD_TAIWAN,omitempty"`
+						GJD_THAILAND    int `xml:"GJD_THAILAND,omitempty"`
+						GJD_ASIA_ELLERS int `xml:"GJD_ASIA_ELLERS,omitempty"`
+					} `xml:"asia,omitempty"`
 					Amerika struct {
-						GJD_BRASIL               string `xml:"GJD_BRASIL"`
-						GJD_CANADA               string `xml:"GJD_CANADA"`
-						GJD_MEXICO               string `xml:"GJD_MEXICO"`
-						GJD_USA                  string `xml:"GJD_USA"`
-						GJD_LATIN_AMERIKA_ELLERS string `xml:"GJD_LATIN_AMERIKA_ELLERS"`
-					} `xml:"amerika"`
+						GJD_BRASIL               int `xml:"GJD_BRASIL,omitempty"`
+						GJD_CANADA               int `xml:"GJD_CANADA,omitempty"`
+						GJD_MEXICO               int `xml:"GJD_MEXICO,omitempty"`
+						GJD_USA                  int `xml:"GJD_USA,omitempty"`
+						GJD_LATIN_AMERIKA_ELLERS int `xml:"GJD_LATIN_AMERIKA_ELLERS,omitempty"`
+					} `xml:"amerika,omitempty"`
 					Oceania struct {
-						GJD_AUSTRALIA      string `xml:"GJD_AUSTRALIA"`
-						GJD_OCEANIA_ELLERS string `xml:"GJD_OCEANIA_ELLERS"`
-					} `xml:"oceania"`
+						GJD_AUSTRALIA      int `xml:"GJD_AUSTRALIA,omitempty"`
+						GJD_OCEANIA_ELLERS int `xml:"GJD_OCEANIA_ELLERS,omitempty"`
+					} `xml:"oceania,omitempty"`
 					Afrika struct {
-						GJD_SOR_AFRIKA    string `xml:"GJD_SOR_AFRIKA"`
-						GJD_AFRIKA_ELLERS string `xml:"GJD_AFRIKA_ELLERS"`
-					} `xml:"afrika"`
+						GJD_SOR_AFRIKA    int `xml:"GJD_SOR_AFRIKA,omitempty"`
+						GJD_AFRIKA_ELLERS int `xml:"GJD_AFRIKA_ELLERS,omitempty"`
+					} `xml:"afrika,omitempty"`
 				} `xml:"land"`
 			} `xml:"beleggHotell"`
 		} `xml:"belegg"`
