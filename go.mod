@@ -3,7 +3,6 @@ module github.com/omniboost/go-altinn
 go 1.22
 
 require (
-	github.com/cydev/zero v0.0.0-20160322155811-4a4535dd56e7
 	github.com/gorilla/schema v0.0.0-20171211162101-9fa3b6af65dc
 	github.com/pkg/errors v0.9.1
 	golang.org/x/crypto v0.19.0
@@ -11,4 +10,11 @@ require (
 	gopkg.in/guregu/null.v3 v3.5.0
 )
 
-replace github.com/gorilla/schema => github.com/omniboost/schema v1.1.1-0.20191030093734-a170fe1a7240
+require (
+	github.com/golang/protobuf v1.5.3 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/protobuf v1.31.0 // indirect
+)
+
+replace github.com/gorilla/schema => github.com/omniboost/schema v1.1.1-0.20211111150515-2e872025e306
