@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetAccessTokenForSystemRegister(t *testing.T) {
-	token, err := signer.GetAccessTokenForSystemRegister()
+	token, err := client.GetSigner().GetAccessTokenForSystemRegister()
 	if err != nil {
 		t.Fatal(err)
 	}

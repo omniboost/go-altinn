@@ -28,6 +28,7 @@ type JWTSigner struct {
 	clientID    string
 	keyID       string
 	Debug       bool
+	httpClient  *http.Client
 }
 
 type AccessTokenResponse struct {
@@ -137,6 +138,14 @@ func NewJWTSigner(key []byte, keyID, environment, clientId string) (*JWTSigner, 
 	}, nil
 }
 
+func (j *JWTSigner) SetDebug(debug bool) {
+	j.Debug = debug
+}
+
+func (j *JWTSigner) SetHTTPClient(client *http.Client) {
+	j.httpClient = client
+}
+
 func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, error) {
 	token := jwt.NewWithClaims(jwtsigner.SigningMethodSignerRS256, &JWTPayload{
 		Audience:             GetAssertionAud(j.environment),
@@ -181,7 +190,7 @@ func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, err
 		fmt.Printf("%s\n", rr)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := j.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -214,6 +223,47 @@ func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, err
 	return &tokenResponse, nil
 }
 
+func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error) {
+	url := strings.TrimRight(GetAltinnBaseURL(c.signer.environment), "/") + "/authentication/api/v1/exchange/maskinporten?test="
+	if c.signer.environment == "test" {
+		url += "true"
+	} else {
+		url += "false"
+	}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Authorization", accessToken.TokenType+" "+accessToken.AccessToken)
+
+	if true || c.signer.Debug {
+		rr, _ := httputil.DumpRequest(req, true)
+		fmt.Printf("%s\n", rr)
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	if true || c.signer.Debug {
+		rrr, _ := httputil.DumpResponse(resp, true)
+		fmt.Printf("%s\n", rrr)
+	}
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("Error closing response body: %v", cerr)
+		}
+	}()
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Token exchange endpoint returned non-200 status: %d, body: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	return string(bodyBytes), nil
+}
+
 func IsBase64(input string) bool {
 	r, _ := regexp.Compile("^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)?$")
 	return r.MatchString(input)
@@ -225,6 +275,16 @@ func GetBaseURL(environment string) string {
 		return "https://maskinporten.no/"
 	case "test":
 		return "https://test.maskinporten.no/"
+	default:
+		panic("Invalid environment setting. Valid values: prod, test")
+	}
+}
+func GetAltinnBaseURL(environment string) string {
+	switch environment {
+	case "prod":
+		return "https://platform.altinn.no/"
+	case "test":
+		return "https://platform.tt02.altinn.no/"
 	default:
 		panic("Invalid environment setting. Valid values: prod, test")
 	}
