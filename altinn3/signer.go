@@ -137,7 +137,7 @@ func NewJWTSigner(key []byte, keyID, environment, clientId string) (*JWTSigner, 
 	}, nil
 }
 
-func (j *JWTSigner) GetAcccessTokenForSystemRegister() (*AccessTokenResponse, error) {
+func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, error) {
 	token := jwt.NewWithClaims(jwtsigner.SigningMethodSignerRS256, &JWTPayload{
 		Audience:             GetAssertionAud(j.environment),
 		Scope:                SYSTEM_REGISTER_SCOPE,
@@ -219,28 +219,21 @@ func IsBase64(input string) bool {
 	return r.MatchString(input)
 }
 
-func GetAssertionAud(environment string) string {
+func GetBaseURL(environment string) string {
 	switch environment {
 	case "prod":
 		return "https://maskinporten.no/"
 	case "test":
-		return "https://test.maskinporten.no/token"
-	case "test2":
-		return "altinn.no"
+		return "https://test.maskinporten.no/"
 	default:
 		panic("Invalid environment setting. Valid values: prod, test")
 	}
 }
 
+func GetAssertionAud(environment string) string {
+	return strings.TrimRight(GetBaseURL(environment), "/") + "/token"
+}
+
 func GetTokenEndpoint(environment string) string {
-	switch environment {
-	case "prod":
-		return "https://maskinporten.no/token"
-	case "test":
-		return "https://test.maskinporten.no/token"
-	case "test2":
-		return "https://test.maskinporten.no/token"
-	default:
-		panic("Invalid environment setting. Valid values: prod, test")
-	}
+	return strings.TrimRight(GetBaseURL(environment), "/") + "/token"
 }

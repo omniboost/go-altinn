@@ -24,7 +24,7 @@ func TestGetAcccessTokenForSystemRegister(t *testing.T) {
 
 	a.Debug = false
 
-	token, err := a.GetAcccessTokenForSystemRegister()
+	token, err := a.GetAccessTokenForSystemRegister()
 	if err != nil {
 		t.Fatal(err)
 	}
