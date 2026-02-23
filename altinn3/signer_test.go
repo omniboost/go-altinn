@@ -1,30 +1,12 @@
-package altinn3
+package altinn3_test
 
 import (
-	"os"
 	"testing"
 	"time"
 )
 
-func TestGetAcccessTokenForSystemRegister(t *testing.T) {
-	privateKey := os.Getenv("PRIVATE_KEY")
-	keyID := os.Getenv("KEY_ID")
-	clientID := os.Getenv("CLIENT_ID")
-	environment := os.Getenv("ENVIRONMENT")
-
-	a, err := NewJWTSigner(
-		[]byte(privateKey),
-		keyID,
-		environment,
-		clientID,
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	a.Debug = false
-
-	token, err := a.GetAccessTokenForSystemRegister()
+func TestGetAccessTokenForSystemRegister(t *testing.T) {
+	token, err := signer.GetAccessTokenForSystemRegister()
 	if err != nil {
 		t.Fatal(err)
 	}
