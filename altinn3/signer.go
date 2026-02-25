@@ -67,13 +67,17 @@ type JWTPayload struct {
 	IssuedAt  TimeInt `json:"iat"`
 	Jti       string  `json:"jti"`
 
-	AuthorizationDetails *struct {
-		Type          string `json:"type"`
-		SystemUserOrg struct {
-			Authority string `json:"authority"`
-			ID        string `json:"ID"`
-		} `json:"systemuser_org"`
-	} `json:"authorization_details,omitempty"`
+	AuthorizationDetails *AuthorizationDetails `json:"authorization_details,omitempty"`
+}
+
+type AuthorizationDetails struct {
+	Type          string                            `json:"type"`
+	SystemUserOrg AuthorizationDetailsSystemUserOrg `json:"systemuser_org"`
+}
+
+type AuthorizationDetailsSystemUserOrg struct {
+	Authority string `json:"authority"`
+	ID        string `json:"ID"`
 }
 
 func (J *JWTPayload) GetExpirationTime() (*jwt.NumericDate, error) {
@@ -146,16 +150,34 @@ func (j *JWTSigner) SetHTTPClient(client *http.Client) {
 	j.httpClient = client
 }
 
+func (j *JWTSigner) GetAccessTokenForSystemUserRequest(consumerOrgNo *string) (*AccessTokenResponse, error) {
+	return j.getAccessToken(SYSTEM_REGISTER_USER_SCOPE, consumerOrgNo)
+}
+
 func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, error) {
+	return j.getAccessToken(SYSTEM_REGISTER_SCOPE, nil)
+}
+
+func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessTokenResponse, error) {
 	token := jwt.NewWithClaims(jwtsigner.SigningMethodSignerRS256, &JWTPayload{
 		Audience:             GetAssertionAud(j.environment),
-		Scope:                SYSTEM_REGISTER_SCOPE,
+		Scope:                scope,
 		Issuer:               j.clientID,
 		ExpiresAt:            TimeInt(time.Now().Add(10 * time.Second).UTC()),
 		IssuedAt:             TimeInt(time.Now().UTC()),
 		Jti:                  uuid.NewString(),
 		AuthorizationDetails: nil,
 	})
+
+	if systemUserId != nil {
+		token.Claims.(*JWTPayload).AuthorizationDetails = &AuthorizationDetails{
+			Type: "urn:altinn:systemuser",
+			SystemUserOrg: AuthorizationDetailsSystemUserOrg{
+				Authority: "iso6523-actorid-upis",
+				ID:        "0192:" + *systemUserId,
+			},
+		}
+	}
 	token.Header["kid"] = j.keyID
 	tokenString, err := token.SignedString(j.keyContext)
 	if err != nil {
@@ -236,7 +258,7 @@ func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error)
 	}
 	req.Header.Set("Authorization", accessToken.TokenType+" "+accessToken.AccessToken)
 
-	if true || c.signer.Debug {
+	if c.signer.Debug {
 		rr, _ := httputil.DumpRequest(req, true)
 		fmt.Printf("%s\n", rr)
 	}
@@ -244,7 +266,7 @@ func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error)
 	if err != nil {
 		return "", err
 	}
-	if true || c.signer.Debug {
+	if c.signer.Debug {
 		rrr, _ := httputil.DumpResponse(resp, true)
 		fmt.Printf("%s\n", rrr)
 	}
