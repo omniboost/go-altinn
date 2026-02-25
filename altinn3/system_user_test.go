@@ -1,6 +1,9 @@
 package altinn3_test
 
-import "testing"
+import (
+	"os"
+	"testing"
+)
 
 func TestCreateSystemUser(t *testing.T) {
 	token, err := client.CreateSystemUser()
@@ -12,7 +15,11 @@ func TestCreateSystemUser(t *testing.T) {
 }
 
 func TestViewSystemUserRequest(t *testing.T) {
-	token, err := client.ViewSystemUserRequest("f10b4724-8b1c-4e3d-84e1-e3bd4861f3b0")
+	systemUserID := os.Getenv("SYSTEM_USER_ID")
+	if systemUserID == "" {
+		t.Fatal("SYSTEM_USER_ID environment variable is not set")
+	}
+	token, err := client.ViewSystemUserRequest(systemUserID)
 	if err != nil {
 		t.Fatal(err)
 	}
