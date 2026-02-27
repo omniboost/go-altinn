@@ -1,4 +1,4 @@
-package altinn3_test
+package auth_test
 
 import (
 	"log"
@@ -6,10 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/omniboost/go-altinn/altinn3"
+	"github.com/omniboost/go-altinn/auth"
 )
 
-var client *altinn3.Client
+var client *auth.Client
 
 func TestMain(m *testing.M) {
 	privateKey := os.Getenv("PRIVATE_KEY")
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	organizaionID := os.Getenv("ORGANIZATION_ID")
 
 	var err error
-	client, err = altinn3.NewClient(
+	client, err = auth.NewClient(
 		http.DefaultClient,
 		[]byte(privateKey),
 		keyID,

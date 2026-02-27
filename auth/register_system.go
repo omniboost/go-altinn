@@ -1,10 +1,11 @@
-package altinn3
+package auth
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -50,7 +51,7 @@ type TranslatedString struct {
 // RegisterSystem registers a system in Altinn. This is required to be able to use the system user functionality.
 // The response is the system id, currently not used for anything, but it can be used to check if the system was registered successfully.
 func (c *Client) RegisterSystem() (string, error) {
-	path := strings.TrimRight(GetAltinnBaseURL(c.signer.environment), "/") + "/authentication/api/v1/systemregister/vendor"
+	path := strings.TrimRight(GetAltinnBaseURL(c.signer.environment), "/") + "/authentication/api/v1/systemregister/vendor/" + c.organizationID + "_omniboost"
 
 	body := SystemRegisterRequest{
 		ID: c.organizationID + "_omniboost",
@@ -71,17 +72,17 @@ func (c *Client) RegisterSystem() (string, error) {
 		Rights: nil,
 		AccessPackages: []SystemRegisterAccessPackage{
 			{
-				URN: "urn:altinn:accesspackage:ansvarlig-revisor",
+				URN: "urn:altinn:accesspackage:overnatting",
 			},
 		},
 		ClientID:            []string{c.signer.clientID},
 		AllowedRedirectURLs: []string{"https://omniboost.io/"},
-		IsVisible:           false,
+		IsVisible:           true,
 	}
 
 	jsonBody, _ := json.Marshal(body)
 
-	request, err := http.NewRequest("POST", path, bytes.NewBuffer(jsonBody))
+	request, err := http.NewRequest("PUT", path, bytes.NewBuffer(jsonBody))
 	if err != nil {
 		return "", fmt.Errorf("could not create request: %w", err)
 	}
@@ -93,7 +94,7 @@ func (c *Client) RegisterSystem() (string, error) {
 		return "", fmt.Errorf("could not get access token: %w", err)
 	}
 
-	token, err := c.ExchangeToken(accessToken)
+	token, err := c.ExchangeToken(accessToken, "", "")
 	if err != nil {
 		return "", fmt.Errorf("could not exchange token: %w", err)
 	}
@@ -101,7 +102,7 @@ func (c *Client) RegisterSystem() (string, error) {
 	request.Header.Set("Authorization", "Bearer "+token)
 	if c.signer.Debug {
 		rr, _ := httputil.DumpRequest(request, true)
-		fmt.Printf("%s\n", rr)
+		log.Printf("%s\n", rr)
 	}
 	response, err := c.httpClient.Do(request)
 	if err != nil {

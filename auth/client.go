@@ -1,4 +1,4 @@
-package altinn3
+package auth
 
 import "net/http"
 

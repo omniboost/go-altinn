@@ -8,6 +8,7 @@ type Request interface {
 	PathParamsInterface() PathParams
 	RequestBodyInterface() interface{}
 	URL() *url.URL
+	IsXML() bool
 }
 
 type QueryParams interface {

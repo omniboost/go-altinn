@@ -1,10 +1,11 @@
-package altinn3
+package auth
 
 import (
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/http/httputil"
 	"strings"
@@ -26,12 +27,12 @@ func (c *Client) CreateSystemUser() (string, error) {
 	path := strings.TrimRight(GetAltinnBaseURL(c.signer.environment), "/") + "/authentication/api/v1/systemuser/request/vendor/agent"
 
 	body := SystemUserRequest{
-		ExternalRef: "omniboost_system_user_01",
+		ExternalRef: "omniboost_system_user_03",
 		SystemID:    c.organizationID + "_omniboost",
 		PartyOrgNo:  c.organizationID,
 		AccessPackages: []SystemUserRequestAccessPackage{
 			{
-				URN: "urn:altinn:accesspackage:ansvarlig-revisor",
+				URN: "urn:altinn:accesspackage:overnatting",
 			},
 		},
 		//RedirectURL: "https://omniboost.io/",
@@ -51,7 +52,7 @@ func (c *Client) CreateSystemUser() (string, error) {
 		return "", fmt.Errorf("could not get access token: %w", err)
 	}
 
-	token, err := c.ExchangeToken(accessToken)
+	token, err := c.ExchangeToken(accessToken, "", "")
 	if err != nil {
 		return "", fmt.Errorf("could not exchange token: %w", err)
 	}
@@ -59,7 +60,7 @@ func (c *Client) CreateSystemUser() (string, error) {
 	request.Header.Set("Authorization", "Bearer "+token)
 	if c.signer.Debug {
 		rr, _ := httputil.DumpRequest(request, true)
-		fmt.Printf("%s\n", rr)
+		log.Printf("%s\n", rr)
 	}
 	response, err := c.httpClient.Do(request)
 	if err != nil {
@@ -71,7 +72,7 @@ func (c *Client) CreateSystemUser() (string, error) {
 		return "", err
 	}
 
-	if response.StatusCode != http.StatusOK {
+	if response.StatusCode != http.StatusCreated {
 		return "", fmt.Errorf("unexpected status code: %d, body: %s", response.StatusCode, string(bodyBytes))
 	}
 
@@ -92,7 +93,7 @@ func (c *Client) ViewSystemUserRequest(requestID string) (string, error) {
 		return "", fmt.Errorf("could not get access token: %w", err)
 	}
 
-	token, err := c.ExchangeToken(accessToken)
+	token, err := c.ExchangeToken(accessToken, "", "")
 	if err != nil {
 		return "", fmt.Errorf("could not exchange token: %w", err)
 	}
@@ -100,7 +101,7 @@ func (c *Client) ViewSystemUserRequest(requestID string) (string, error) {
 	request.Header.Set("Authorization", "Bearer "+token)
 	if c.signer.Debug {
 		rr, _ := httputil.DumpRequest(request, true)
-		fmt.Printf("%s\n", rr)
+		log.Printf("%s\n", rr)
 	}
 	response, err := c.httpClient.Do(request)
 	if err != nil {

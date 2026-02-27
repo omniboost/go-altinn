@@ -11,157 +11,131 @@ import (
 
 func TestMarshalMelding(t *testing.T) {
 	b := []byte(`
-<?xml version='1.0' encoding='utf-8'?>
-<melding xmlns:seres= "http://seres.no/xsd/forvaltningsdata" dataFormatProvider="SERES" dataFormatId="6400" dataFormatVersion="45188">
-  <InternInformasjon>
-    <periodeFritekst>juni 2024</periodeFritekst>
-    <rapportPeriode>
-      <fomDato>2024-06-01</fomDato>
-      <tomDato>2024-06-30</tomDato>
-    </rapportPeriode>
-    <raNummer>RA-0297</raNummer>
-    <delRegNummer>0</delRegNummer>
-    <identnummerEnhet>973068075</identnummerEnhet>
-    <sendtFraSluttbrukersystem>true</sendtFraSluttbrukersystem>
-    <statistiskEnhet>
-      <enhetsident>973068075</enhetsident>
-      <enhetstype>BEDR</enhetstype>
-    </statistiskEnhet>
-    <skjemaidentifikasjon>
-      <periodenummer>06</periodenummer>
-      <periodetype>MND</periodetype>
-      <periodeAAr>2024</periodeAAr>
-      <undersoekelsesnummer>78</undersoekelsesnummer>
-    </skjemaidentifikasjon>
-  </InternInformasjon>
-  <KontaktpersonOgKommentarfelt>
-    <kontaktperson>
-      <epostadresse>kristin.frigstad@strawberry.no</epostadresse>
-      <navn>Kristin Frigstad</navn>
-      <telefonSFU>38128600</telefonSFU>
-    </kontaktperson>
-  </KontaktpersonOgKommentarfelt>
-  <ForetakOgVirksomhetsopplysninger>
-    <virksomhet>
-      <organisasjonsnummerVirksomhet>973068075</organisasjonsnummerVirksomhet>
-      <navnVirksomhet>Clarion Hotel Ernst</navnVirksomhet>
-      <adresseVirksomhet>
-        <gateadresse>Radhusgaten 2</gateadresse>
-        <postnummer>4664</postnummer>
-        <poststed>Kristiansand</poststed>
-      </adresseVirksomhet>
-    </virksomhet>
-  </ForetakOgVirksomhetsopplysninger>
-  <StatusVirksomhetMedDriftsperiode>
-    <driftsstatusPeriode>jaDrift</driftsstatusPeriode>
-  </StatusVirksomhetMedDriftsperiode>
-  <Naeringskontrollspoersmaal>
-    <visNaeringskontrollJaNeiPrefill />
-    <Naeringskontroll>
-      <naeringskode>55.101</naeringskode>
-      <naeringstekst>Drift av hoteller, pensjonater og moteller med restaurant</naeringstekst>
-      <naeringsbeskrivelse />
-      <nyNaeringsbeskrivelse>
-        <alltidViktigsteAktivitet />
-      </nyNaeringsbeskrivelse>
-    </Naeringskontroll>
-  </Naeringskontrollspoersmaal>
-  <Oppgavebyrde>
-    <visOppgavebyrdeJaNeiPrefill>2</visOppgavebyrdeJaNeiPrefill>
-    <tidsbrukSamleInformasjon />
-    <tidsbrukSelveSkjemautfyllingen />
-    <tidsbrukTotalHjelpAvAndre />
-  </Oppgavebyrde>
-  <Skjemadata>
-    <rapporteringsenhet>
-      <typeHotell />
-      <typeVandrehjem />
-      <typeHytter />
-      <typeCamping />
-      <typeAnnen />
-    </rapporteringsenhet>
-    <kapasitet>
-      <kapasitetHotell>
-        <antDager>
-          <endret>1</endret>
-          <antallEndret>29</antallEndret>
-        </antDager>
-        <antGjesterom>
-          <endret>1</endret>
-          <antallEndret>199</antallEndret>
-        </antGjesterom>
-        <antRullestol>
-          <endret>1</endret>
-          <antallEndret>11</antallEndret>
-        </antRullestol>
-        <antFasteSengeplasser>
-          <endret>1</endret>
-          <antallEndret>378</antallEndret>
-        </antFasteSengeplasser>
-      </kapasitetHotell>
-      <kapasitetHytte>
-        <antDager />
-        <antUtleieenheter />
-        <antFasteSengeplasser />
-      </kapasitetHytte>
-      <kapasitetCamping>
-        <antDager />
-        <antUtekapasitet />
-        <antInnekapasitet />
-        <antFasteSengeplasser />
-      </kapasitetCamping>
-    </kapasitet>
-    <omsetningHotell>
-      <romdoegn>4833</romdoegn>
-      <losjiomsetning>7907433</losjiomsetning>
-    </omsetningHotell>
-    <belegg>
-      <beleggHotell>
-        <antGjester>4268</antGjester>
-        <antNorskeGjester>3623</antNorskeGjester>
-        <antGjestedoegn>6673</antGjestedoegn>
-        <ferieFritidGjestedoegn>1568</ferieFritidGjestedoegn>
-        <kursGjestedoegn>338</kursGjestedoegn>
-        <forretningsGjestedoegn>4767</forretningsGjestedoegn>
-        <land>
-          <norden>
-            <GJD_DANMARK>48</GJD_DANMARK>
-            <GJD_FINLAND>13</GJD_FINLAND>
-            <GJD_ISLAND>4</GJD_ISLAND>
-            <GJD_NORGE>5741</GJD_NORGE>
-            <GJD_SVERIGE>102</GJD_SVERIGE>
-          </norden>
-          <europa>
-            <GJD_BELGIA>8</GJD_BELGIA>
-            <GJD_FRANKRIKE>6</GJD_FRANKRIKE>
-            <GJD_ITALIA>9</GJD_ITALIA>
-            <GJD_KROATIA>3</GJD_KROATIA>
-            <GJD_NEDERLAND>19</GJD_NEDERLAND>
-            <GJD_POLEN>2</GJD_POLEN>
-            <GJD_SLOVAKIA>3</GJD_SLOVAKIA>
-            <GJD_STORBRITANNIA>22</GJD_STORBRITANNIA>
-            <GJD_SVEITS>20</GJD_SVEITS>
-            <GJD_TYSKLAND>70</GJD_TYSKLAND>
-          </europa>
-          <asia>
-            <GJD_JAPAN>2</GJD_JAPAN>
-            <GJD_ASIA_ELLERS>7</GJD_ASIA_ELLERS>
-          </asia>
-          <amerika>
-            <GJD_BRASIL>4</GJD_BRASIL>
-            <GJD_USA>584</GJD_USA>
-          </amerika>
-          <oceania>
-            <GJD_AUSTRALIA>6</GJD_AUSTRALIA>
-          </oceania>
-          <afrika />
-        </land>
-      </beleggHotell>
-    </belegg>
-  </Skjemadata>
-</melding>`)
+<A3_RS0297_M
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema" dataFormatProvider="ALTINNSTUDIO" dataFormatId="A31000" dataFormatVersion="1">
+    <InternInfo>
+        <periodeNummer>01</periodeNummer>
+        <periodeAAr>2026</periodeAAr>
+        <enhetsOrgNr>973222597</enhetsOrgNr>
+    </InternInfo>
+    <SkjemaData>
+        <sluttbrukerSystemNavn>Mews</sluttbrukerSystemNavn>
+        <iDriftJaNei>1</iDriftJaNei>
+        <antallDagerAApen>31</antallDagerAApen>
+        <tilgjengeligeGjesterom>144</tilgjengeligeGjesterom>
+        <tilgjengeligeRomRullestol>0</tilgjengeligeRomRullestol>
+        <fasteSengeplasser>144</fasteSengeplasser>
+        <romdogn>1400</romdogn>
+        <losjiomsetning>1714831</losjiomsetning>
+        <antallNorskeGjester>1212</antallNorskeGjester>
+        <antallUtlGjester>104</antallUtlGjester>
+        <antallGjestedogn>1864</antallGjestedogn>
+        <bostedsLand>
+            <bostedsLandID>000</bostedsLandID>
+            <antallGjestedognLand>1648</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>101</bostedsLandID>
+            <antallGjestedognLand>24</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>106</bostedsLandID>
+            <antallGjestedognLand>19</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>122</bostedsLandID>
+            <antallGjestedognLand>1</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>121</bostedsLandID>
+            <antallGjestedognLand>4</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>124</bostedsLandID>
+            <antallGjestedognLand>4</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>136</bostedsLandID>
+            <antallGjestedognLand>3</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>127</bostedsLandID>
+            <antallGjestedognLand>18</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>131</bostedsLandID>
+            <antallGjestedognLand>5</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>132</bostedsLandID>
+            <antallGjestedognLand>6</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>133</bostedsLandID>
+            <antallGjestedognLand>3</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>137</bostedsLandID>
+            <antallGjestedognLand>36</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>139</bostedsLandID>
+            <antallGjestedognLand>29</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>141</bostedsLandID>
+            <antallGjestedognLand>20</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>143</bostedsLandID>
+            <antallGjestedognLand>1</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>144</bostedsLandID>
+            <antallGjestedognLand>7</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>444</bostedsLandID>
+            <antallGjestedognLand>3</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>448</bostedsLandID>
+            <antallGjestedognLand>6</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>612</bostedsLandID>
+            <antallGjestedognLand>15</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>684</bostedsLandID>
+            <antallGjestedognLand>8</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>805</bostedsLandID>
+            <antallGjestedognLand>4</antallGjestedognLand>
+        </bostedsLand>
+        <bostedsLand>
+            <bostedsLandID>990</bostedsLandID>
+            <antallGjestedognLand>0</antallGjestedognLand>
+        </bostedsLand>
+        <oppholdsFormaal>
+            <formaalID>1</formaalID>
+            <antallGjestedognFormaal>1223</antallGjestedognFormaal>
+        </oppholdsFormaal>
+        <oppholdsFormaal>
+            <formaalID>2</formaalID>
+            <antallGjestedognFormaal>0</antallGjestedognFormaal>
+        </oppholdsFormaal>
+        <oppholdsFormaal>
+            <formaalID>3</formaalID>
+            <antallGjestedognFormaal>641</antallGjestedognFormaal>
+        </oppholdsFormaal>
+    </SkjemaData>
+</A3_RS0297_M>
+`)
 
-	melding := altinn.Melding{}
+	melding := altinn.RS0297FormData{}
 
 	// convert xml to struct
 	err := xml.Unmarshal(b, &melding)

@@ -4,32 +4,34 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
 	"path"
 	"strings"
 	"text/template"
 
+	"github.com/omniboost/go-altinn/auth"
 	"github.com/pkg/errors"
 )
 
 const (
-	libraryVersion = "0.0.1"
+	libraryVersion = "0.0.3"
 	userAgent      = "go-altinn/" + libraryVersion
-	mediaType      = "application/hal+json"
+	mediaType      = "application/json"
+	mediaTypeXML   = "application/xml"
 	charset        = "utf-8"
 )
 
 var (
 	BaseURL = url.URL{
 		Scheme: "https",
-		Host:   "www.altinn.no",
-		Path:   "/api/",
+		Host:   "ssb.apps.altinn.no",
+		Path:   "/",
 	}
 )
 
@@ -40,8 +42,6 @@ func NewClient(httpClient *http.Client) *Client {
 	}
 
 	client := &Client{}
-	client.cookiejar, _ = cookiejar.New(nil)
-
 	client.SetHTTPClient(httpClient)
 	client.SetBaseURL(BaseURL)
 	client.SetDebug(false)
@@ -60,11 +60,8 @@ type Client struct {
 	debug   bool
 	baseURL url.URL
 
-	// credentials
-	apiKey       string
-	userName     string
-	userPassword string
-	cookiejar    *cookiejar.Jar
+	// altinn 3
+	authenticationClient *auth.Client
 
 	// User agent for client
 	userAgent string
@@ -78,6 +75,14 @@ type Client struct {
 	onRequestCompleted RequestCompletionCallback
 }
 
+func (c *Client) GetAuthenticationClient() *auth.Client {
+	return c.authenticationClient
+}
+
+func (c *Client) SetAuthenticationClient(authClient *auth.Client) {
+	c.authenticationClient = authClient
+}
+
 type BeforeRequestDoCallback func(*http.Client, *http.Request, interface{})
 
 // RequestCompletionCallback defines the type of the request callback function
@@ -85,7 +90,6 @@ type RequestCompletionCallback func(*http.Request, *http.Response)
 
 func (c *Client) SetHTTPClient(client *http.Client) {
 	c.http = client
-	c.http.Jar = c.cookiejar
 }
 
 func (c Client) Debug() bool {
@@ -94,30 +98,6 @@ func (c Client) Debug() bool {
 
 func (c *Client) SetDebug(debug bool) {
 	c.debug = debug
-}
-
-func (c Client) APIKey() string {
-	return c.apiKey
-}
-
-func (c *Client) SetAPIKey(apiKey string) {
-	c.apiKey = apiKey
-}
-
-func (c Client) UserName() string {
-	return c.userName
-}
-
-func (c *Client) SetUserName(userName string) {
-	c.userName = userName
-}
-
-func (c Client) UserPassword() string {
-	return c.userPassword
-}
-
-func (c *Client) SetUserPassword(userPassword string) {
-	c.userPassword = userPassword
 }
 
 func (c Client) BaseURL() url.URL {
@@ -134,6 +114,10 @@ func (c *Client) SetMediaType(mediaType string) {
 
 func (c Client) MediaType() string {
 	return mediaType
+}
+
+func (c Client) MediaTypeXML() string {
+	return mediaTypeXML
 }
 
 func (c *Client) SetCharset(charset string) {
@@ -184,7 +168,6 @@ func (c *Client) GetEndpointURL(p string, pathParams PathParams) url.URL {
 
 	buf := new(bytes.Buffer)
 	params := pathParams.Params()
-	// params["administration_id"] = c.Administration()
 	err = tmpl.Execute(buf, params)
 	if err != nil {
 		log.Fatal(err)
@@ -197,13 +180,22 @@ func (c *Client) GetEndpointURL(p string, pathParams PathParams) url.URL {
 func (c *Client) NewRequest(ctx context.Context, req Request) (*http.Request, error) {
 	// convert body struct to json
 	buf := new(bytes.Buffer)
+
 	if req.RequestBodyInterface() != nil {
-		err := json.NewEncoder(buf).Encode(req.RequestBodyInterface())
-		if err != nil {
-			return nil, err
+		if !req.IsXML() {
+			err := json.NewEncoder(buf).Encode(req.RequestBodyInterface())
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			enc := xml.NewEncoder(buf)
+			defer enc.Close()
+			err := enc.Encode(req.RequestBodyInterface())
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-
 	// create new http request
 	r, err := http.NewRequest(req.Method(), req.URL().String(), buf)
 	if err != nil {
@@ -222,11 +214,18 @@ func (c *Client) NewRequest(ctx context.Context, req Request) (*http.Request, er
 	}
 
 	// set other headers
-	r.Header.Add("Content-Type", fmt.Sprintf("%s; charset=%s", c.MediaType(), c.Charset()))
+	if req.IsXML() {
+		r.Header.Add("Content-Type", fmt.Sprintf("%s; charset=%s", c.MediaTypeXML(), c.Charset()))
+	} else {
+		r.Header.Add("Content-Type", fmt.Sprintf("%s; charset=%s", c.MediaType(), c.Charset()))
+	}
 	r.Header.Add("Accept", c.MediaType())
 	r.Header.Add("User-Agent", c.UserAgent())
-	r.Header.Add("ApiKey", c.APIKey())
-
+	token, err := c.authenticationClient.GetAccessToken()
+	if err != nil {
+		return nil, err
+	}
+	r.Header.Add("Authorization", "Bearer "+token)
 	return r, nil
 }
 
@@ -338,23 +337,6 @@ func (c *Client) Unmarshal(r io.Reader, vv ...interface{}) error {
 	return nil
 }
 
-func (c *Client) IsAuthenticated() bool {
-	return len(c.http.Jar.Cookies(&c.baseURL)) > 0
-}
-
-func (c *Client) Authenticate(req *http.Request) error {
-	if c.IsAuthenticated() {
-		return nil
-	}
-
-	authReq := c.NewAuthenticateWithPassword()
-	authReq.RequestBody().UserName = c.UserName()
-	authReq.RequestBody().UserPassword = c.UserPassword()
-	authReq.QueryParams().ForceEIAuthentication = false
-	_, err := authReq.Do()
-	return err
-}
-
 // CheckResponse checks the Client response for errors, and returns them if
 // present. A response is considered an error if it has a status code outside
 // the 200 range. Client error responses are expected to have either no response
@@ -403,12 +385,12 @@ type ErrorResponse struct {
 	// HTTP response that caused this error
 	Response *http.Response
 
-	Message    string `json:"Message"`
-	ModelState struct {
-		MessageServiceEdition []string `json:"message.ServiceEdition"`
-		MessageType           []string `json:"message.Type"`
-		MessageServiceCode    []string `json:"message.ServiceCode"`
-	} `json:"ModelState"`
+	Message string
+}
+
+func (r *ErrorResponse) UnmarshalJSON(data []byte) error {
+	_ = json.Unmarshal(data, &r.Message)
+	return nil
 }
 
 func (r *ErrorResponse) Error() string {
@@ -418,24 +400,6 @@ func (r *ErrorResponse) Error() string {
 		errs = append(errs, r.Message)
 	}
 
-	for _, v := range r.ModelState.MessageServiceEdition {
-		if v != "" {
-			errs = append(errs, v)
-		}
-	}
-
-	for _, v := range r.ModelState.MessageType {
-		if v != "" {
-			errs = append(errs, v)
-		}
-	}
-
-	for _, v := range r.ModelState.MessageServiceCode {
-		if v != "" {
-			errs = append(errs, v)
-		}
-	}
-
 	if len(r.Message) == 0 {
 		return ""
 	}
@@ -443,33 +407,32 @@ func (r *ErrorResponse) Error() string {
 	return strings.Join(errs, "\n")
 }
 
-// {
-//   "ValidationErrors": [
-//     {
-//       "FieldName": "Not specified",
-//       "ErrorMessage": "<SchemaValidationError>The &#39;Melding&#39; element is not declared.</SchemaValidationError>"
-//     }
-//   ]
-// }
-
+// {"title":"Validation failed for task","status":409,"detail":"1 validation errors found for task Task_1","validationIssues":[{"severity":1,"dataElementId":"b7a68455-c111-4cbc-84dd-f904064047ba","field":"SkjemaData.bostedsLand[0]","code":null,"description":"Landkode 804 er ikke en gyldig landkode.","source":"Altinn.App.AppLogic.Validation.FormDataValidator-A3_RS-0297_M"}]}
 type ValidationResponse struct {
 	// HTTP response that caused this error
 	Response *http.Response
 
-	ValidationErrors []struct {
-		FieldName    string `json:"FieldName"`
-		ErrorMessage string `json:"ErrorMessage"`
-	}
+	Title            string `json:"title"`
+	Status           int    `json:"status"`
+	Detail           string `json:"detail"`
+	ValidationIssues []struct {
+		Severity      int         `json:"severity"`
+		DataElementId string      `json:"dataElementId"`
+		Field         string      `json:"field"`
+		Code          interface{} `json:"code"`
+		Description   string      `json:"description"`
+		Source        string      `json:"source"`
+	} `json:"validationIssues"`
 }
 
 func (r *ValidationResponse) Error() string {
-	if len(r.ValidationErrors) == 0 {
+	if len(r.ValidationIssues) == 0 {
 		return ""
 	}
 
 	errs := []string{}
-	for _, v := range r.ValidationErrors {
-		errs = append(errs, fmt.Sprintf("%s: %s", v.FieldName, v.ErrorMessage))
+	for _, v := range r.ValidationIssues {
+		errs = append(errs, fmt.Sprintf("%s: %s", v.Field, v.Description))
 	}
 
 	return strings.Join(errs, "\n")

@@ -21,18 +21,12 @@ var (
 
 func TestMain(m *testing.M) {
 	baseURLString := os.Getenv("BASE_URL")
-	apiKey := os.Getenv("API_KEY")
-	userName := os.Getenv("USER_NAME")
-	userPassword := os.Getenv("USER_PASSWORD")
 	certPem := []byte(os.Getenv("CERT_PEM"))
 	keyPem := []byte(os.Getenv("KEY_PEM"))
 	p12 := os.Getenv("P12")
 	debug := os.Getenv("DEBUG")
 
 	client = altinn.NewClient(nil)
-	client.SetAPIKey(apiKey)
-	client.SetUserName(userName)
-	client.SetUserPassword(userPassword)
 	if debug != "" {
 		client.SetDebug(true)
 	}

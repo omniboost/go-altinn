@@ -1,4 +1,4 @@
-package altinn3
+package auth
 
 import (
 	"context"
@@ -41,17 +41,7 @@ type AccessTokenResponse struct {
 
 const SYSTEM_REGISTER_SCOPE = "altinn:authentication/systemregister.write"
 const SYSTEM_REGISTER_USER_SCOPE = "altinn:authentication/systemuser.request.write altinn:authentication/systemuser.request.read"
-
-// { "aud", GetAssertionAud(environment) },
-// { "scope", scope },
-// { "iss", clientId },
-// { "exp", dateTimeOffset.ToUnixTimeSeconds() + 10 },
-// { "iat", dateTimeOffset.ToUnixTimeSeconds() },
-// { "jti", Guid.NewGuid().ToString() },
-// { "authorization_details", new { type = "urn:altinn:systemuser", systemuser_org = new {
-// {"authority","iso6523-actorid-upis"}
-// {"ID", "0192:{systemUserOrgno}" }
-// } } }
+const USER_INSTANCE_SCOPE = "altinn:instances.write"
 
 type TimeInt time.Time
 
@@ -67,7 +57,7 @@ type JWTPayload struct {
 	IssuedAt  TimeInt `json:"iat"`
 	Jti       string  `json:"jti"`
 
-	AuthorizationDetails *AuthorizationDetails `json:"authorization_details,omitempty"`
+	AuthorizationDetails []AuthorizationDetails `json:"authorization_details,omitempty"`
 }
 
 type AuthorizationDetails struct {
@@ -158,7 +148,19 @@ func (j *JWTSigner) GetAccessTokenForSystemRegister() (*AccessTokenResponse, err
 	return j.getAccessToken(SYSTEM_REGISTER_SCOPE, nil)
 }
 
-func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessTokenResponse, error) {
+func (j *JWTSigner) GetAccessTokenForUserInstance(org string) (*AccessTokenResponse, error) {
+	return j.getAccessToken(USER_INSTANCE_SCOPE, &org)
+}
+
+func (c *Client) GetAccessToken() (string, error) {
+	tokenResponse, err := c.signer.GetAccessTokenForUserInstance(c.organizationID)
+	if err != nil {
+		return "", err
+	}
+	return c.ExchangeToken(tokenResponse, "", "")
+}
+
+func (j *JWTSigner) getAccessToken(scope string, clientOrganization *string) (*AccessTokenResponse, error) {
 	token := jwt.NewWithClaims(jwtsigner.SigningMethodSignerRS256, &JWTPayload{
 		Audience:             GetAssertionAud(j.environment),
 		Scope:                scope,
@@ -169,14 +171,14 @@ func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessT
 		AuthorizationDetails: nil,
 	})
 
-	if systemUserId != nil {
-		token.Claims.(*JWTPayload).AuthorizationDetails = &AuthorizationDetails{
+	if clientOrganization != nil {
+		token.Claims.(*JWTPayload).AuthorizationDetails = []AuthorizationDetails{{
 			Type: "urn:altinn:systemuser",
 			SystemUserOrg: AuthorizationDetailsSystemUserOrg{
 				Authority: "iso6523-actorid-upis",
-				ID:        "0192:" + *systemUserId,
+				ID:        "0192:" + *clientOrganization,
 			},
-		}
+		}}
 	}
 	token.Header["kid"] = j.keyID
 	tokenString, err := token.SignedString(j.keyContext)
@@ -184,20 +186,20 @@ func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessT
 		return nil, err
 	}
 
-	if j.Debug {
-		println("Generated JWT:")
-		println(tokenString)
-	}
+	//if j.Debug {
+	//	log.Println("Generated JWT:")
+	//	log.Println(tokenString)
+	//}
 
 	// Create form url encoded body
 	values := url.Values{}
 	values.Set("grant_type", "urn:ietf:params:oauth:grant-type:jwt-bearer")
 	values.Set("assertion", tokenString)
 	formBody := values.Encode()
-	if j.Debug {
-		println("Form URL Encoded Body:")
-		println(formBody)
-	}
+	//if j.Debug {
+	//	log.Println("Form URL Encoded Body:")
+	//	log.Println(formBody)
+	//}
 	endpoint := GetTokenEndpoint(j.environment)
 
 	// Create HTTP POST request
@@ -209,7 +211,7 @@ func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessT
 
 	if j.Debug {
 		rr, _ := httputil.DumpRequest(req, true)
-		fmt.Printf("%s\n", rr)
+		log.Printf("%s\n", rr)
 	}
 
 	resp, err := j.httpClient.Do(req)
@@ -219,7 +221,7 @@ func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessT
 
 	if j.Debug {
 		rrr, _ := httputil.DumpResponse(resp, true)
-		fmt.Printf("%s\n", rrr)
+		log.Printf("%s\n", rrr)
 	}
 
 	defer func() {
@@ -245,7 +247,7 @@ func (j *JWTSigner) getAccessToken(scope string, systemUserId *string) (*AccessT
 	return &tokenResponse, nil
 }
 
-func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error) {
+func (c *Client) ExchangeToken(accessToken *AccessTokenResponse, enterpriseUserName, enterprisePassword string) (string, error) {
 	url := strings.TrimRight(GetAltinnBaseURL(c.signer.environment), "/") + "/authentication/api/v1/exchange/maskinporten?test="
 	if c.signer.environment == "test" {
 		url += "true"
@@ -257,10 +259,13 @@ func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error)
 		return "", err
 	}
 	req.Header.Set("Authorization", accessToken.TokenType+" "+accessToken.AccessToken)
+	if enterpriseUserName != "" && enterprisePassword != "" {
+		req.Header.Set("X-Altinn-EnterpriseUser-Authentication", base64.StdEncoding.EncodeToString([]byte(enterpriseUserName+":"+enterprisePassword)))
+	}
 
 	if c.signer.Debug {
 		rr, _ := httputil.DumpRequest(req, true)
-		fmt.Printf("%s\n", rr)
+		log.Printf("%s\n", rr)
 	}
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -268,7 +273,7 @@ func (c *Client) ExchangeToken(accessToken *AccessTokenResponse) (string, error)
 	}
 	if c.signer.Debug {
 		rrr, _ := httputil.DumpResponse(resp, true)
-		fmt.Printf("%s\n", rrr)
+		log.Printf("%s\n", rrr)
 	}
 	defer func() {
 		if cerr := resp.Body.Close(); cerr != nil {
