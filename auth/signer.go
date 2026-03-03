@@ -97,6 +97,10 @@ func (J *JWTPayload) GetAudience() (jwt.ClaimStrings, error) {
 var _ jwt.Claims = (*JWTPayload)(nil)
 
 func NewJWTSigner(key []byte, keyID, environment, clientId string) (*JWTSigner, error) {
+	if len(key) == 0 {
+		return nil, fmt.Errorf("key cannot be empty")
+	}
+
 	if IsBase64(string(key)) {
 		var err error
 		key, err = base64.StdEncoding.DecodeString(string(key))
@@ -104,7 +108,12 @@ func NewJWTSigner(key []byte, keyID, environment, clientId string) (*JWTSigner, 
 			return nil, err
 		}
 	}
+
 	rblock, _ := pem.Decode(key)
+	if rblock == nil {
+		return nil, fmt.Errorf("failed to parse PEM block containing the key")
+	}
+
 	r, err := x509.ParsePKCS8PrivateKey(rblock.Bytes)
 	if err != nil {
 		return nil, err
